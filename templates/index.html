@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='icon.ico') }}">
+    <title>ComputerCraft : Blockly Editor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/blockly/blockly.min.css">
+</head>
+
+<body>
+    <div id="pageContainer">
+        <!-- Blockly Editor Section -->
+        <div id="blocklySection">
+            <div id="blocklyDiv"></div>
+        </div>
+
+        <!-- Sidebar Section -->
+        <div id="sidebar">
+            <!-- Output Pane -->
+            <div id="outputPane">
+                <h1>ComputerCraft Blockly Editor</h1>
+
+                <pre id="generatedCode" class="language-lua"><code></code></pre>
+                <div class="button-group">
+                    <button id="copyButton">Copy</button>
+                    <button id="downloadButton">Download</button>
+                    <button id="downloadLuaButton">Download Lua</button>
+                    <button id="loadButton">Load</button>
+                </div>
+            </div>
+
+            <!-- Search Field with File Name -->
+            <div id="searchField">
+                <h2>File Operations</h2>
+                <label for="fileName">File Name:</label>
+                <input type="text" name="fileName" id="fileName" value="SampleName" placeholder="Enter file name">
+
+                <label for="computerId">Select Computer ID:</label>
+                <select id="computerId">
+                    <option value="" disabled selected>Select a Computer ID</option>
+                </select>
+                <div class="button-group">
+                    <button id="refreshButton">Refresh</button>
+                    <button id="runButton">Run</button>
+                </div>
+            </div>
+
+            <!-- World Connection -->
+            <div id="worldConnection">
+                <h2>Connect to Minecraft World</h2>
+                <label for="worldName">Enter World Name:</label>
+                <input type="text" id="worldName" placeholder="World Name">
+
+                <!-- Removed Saves Path Input -->
+
+                <div class="button-group">
+                    <button id="connectWorldButton">Connect</button>
+                    <button id="createCCButton" style="display: none;">Create ComputerCraft Folders</button>
+                </div>
+                <div id="connectionStatus"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p id="modalMessage"></p>
+            <button id="saveSettingsButton" style="display: none;">Save</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+    <script src="{{ url_for('static', filename='bundle.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

@@ -1,0 +1,9 @@
+#set to env variable
+export SETTINGS_FILE='settings.json' 
+export MINECRAFT_SAVES_PATH='/home/username/.minecraft/saves'  
+
+#commands to bind using gunicorn
+gunicorn app:app --workers 3 --bind 0.0.0.0:5000
+
+#how I run using ngrok (need ngrok installed and configured using snap)
+ngrok http 5000(replace with your port)

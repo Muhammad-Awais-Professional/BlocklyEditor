@@ -1,0 +1,189 @@
+/* Reset some default styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+#pageContainer {
+    display: flex;
+    width: 100%;
+    max-width: 1200px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* Blockly Section */
+#blocklySection {
+    flex: 2;
+    padding: 20px;
+    border-right: 1px solid #e0e0e0;
+    background-color: #fafafa;
+}
+
+#blocklyDiv {
+    width: 100%;
+    height: 600px;
+    border: none;
+    border-radius: 4px;
+    background-color: #ffffff;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+}
+
+/* Sidebar Section */
+#sidebar {
+    flex: 1;
+    padding: 20px;
+    background-color: #f9f9f9;
+    overflow-y: auto;
+}
+
+#outputPane {
+    margin-bottom: 30px;
+}
+
+#outputPane h1 {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    color: #4285f4;
+    text-align: center;
+}
+
+#generatedCode {
+    background-color: #272822;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin-bottom: 15px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+}
+
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.button-group button {
+    flex: 1;
+    padding: 10px;
+    background-color: #4285f4;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 0.9em;
+}
+
+.button-group button:hover {
+    background-color: #357ae8;
+}
+
+#searchField, #worldConnection {
+    margin-bottom: 30px;
+}
+
+#searchField h2, #worldConnection h2 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: #34a853;
+}
+
+#searchField label, #worldConnection label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+#searchField input, #searchField select,
+#worldConnection input {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#connectionStatus {
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: #d93025;
+}
+
+/* Modal Styles */
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.4); 
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto; 
+    padding: 20px;
+    border: 1px solid #888;
+    width: 30%; 
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #000;
+    text-decoration: none;
+}
+
+#saveSettingsButton {
+    background-color: #34a853;
+}
+
+#saveSettingsButton:hover {
+    background-color: #2c8e46;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #pageContainer {
+        flex-direction: column;
+    }
+
+    #blocklySection, #sidebar {
+        width: 100%;
+    }
+
+    #blocklyDiv {
+        height: 400px;
+    }
+}
+
