@@ -942,3 +942,17 @@ RuntimeError: Not running with the Werkzeug Server
 2024-10-18 16:53:56,452 INFO:127.0.0.1 - - [18/Oct/2024 16:53:56] "GET /api/get_computer_ids HTTP/1.1" 200 -
 2024-10-18 16:53:56,702 INFO:Fetched Computer IDs: ['1', '2', '3']
 2024-10-18 16:53:56,702 INFO:127.0.0.1 - - [18/Oct/2024 16:53:56] "GET /api/get_computer_ids HTTP/1.1" 200 -
+2024-10-18 23:05:40,422 ERROR:World "World3" does not exist in saves directory.
+2024-10-18 23:05:46,437 ERROR:World "world3" does not exist in saves directory.
+2024-10-18 23:05:48,971 ERROR:World "word3" does not exist in saves directory.
+2024-10-18 23:05:53,630 ERROR:World "BuildToPlace" does not exist in saves directory.
+2024-10-18 23:06:25,637 ERROR:World "BuildToPlace" does not exist in saves directory.
+2024-10-18 23:09:11,663 ERROR:World "World3" does not exist in saves directory.
+2024-10-18 23:09:15,194 ERROR:World "World3" does not exist in saves directory.
+2024-10-18 23:09:30,233 ERROR:World "World5" does not exist in saves directory.
+2024-10-18 23:23:15,799 INFO:Connected to "World5". ComputerCraft is installed and computers are found.
+2024-10-18 23:23:16,047 INFO:Fetched Computer IDs: ['1', '2', '3']
+2024-10-18 23:23:21,253 INFO:Connected to "World5". ComputerCraft is installed and computers are found.
+2024-10-18 23:23:21,764 INFO:Fetched Computer IDs: ['1', '2', '3']
+2024-10-18 23:23:45,195 INFO:Function "test1" saved as "test1.lua" in Computer ID "1".
+2024-10-18 23:24:26,968 INFO:Lua program successfully written to Computer ID "1" as "SampleName.lua".
