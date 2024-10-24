@@ -1,5 +1,6 @@
 import sys
 from io import BytesIO
+from flask import Flask
 from werkzeug.wrappers import Request, Response
 from app import app  # Ensure 'app' is the Flask instance in app.py
 
@@ -8,7 +9,7 @@ def handler(request):
     environ = {
         'REQUEST_METHOD': request.method,
         'PATH_INFO': request.path,
-        'QUERY_STRING': request.query_string,
+        'QUERY_STRING': request.query_string.decode('utf-8'),
         'CONTENT_TYPE': request.headers.get('Content-Type', ''),
         'CONTENT_LENGTH': request.headers.get('Content-Length', '0'),
         'wsgi.input': BytesIO(request.body or b''),

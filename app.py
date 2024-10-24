@@ -17,7 +17,6 @@ load_dotenv()
 app = Flask(__name__)
 
 # Configuration from environment variables
-SETTINGS_FILE = os.getenv('SETTINGS_FILE', 'settings.json')
 DEFAULT_SAVES_PATH = os.getenv('MINECRAFT_BASE_PATH')
 
 # SFTP Configuration
@@ -27,26 +26,19 @@ SFTP_USERNAME = os.getenv('SFTP_USERNAME')
 SFTP_PASSWORD = os.getenv('SFTP_PASSWORD')
 SFTP_BASE_PATH = os.getenv('SFTP_BASE_PATH', '/home/container/world')
 
+# Validate essential environment variables
 if not DEFAULT_SAVES_PATH:
     raise ValueError("MINECRAFT_BASE_PATH environment variable is not set.")
 
 if not all([SFTP_HOST, SFTP_PORT, SFTP_USERNAME, SFTP_PASSWORD]):
     raise ValueError("SFTP credentials are not fully set in environment variables.")
 
-# Setup logging
-logging.basicConfig(level=logging.INFO, filename='app.log',
-                    format='%(asctime)s %(levelname)s:%(message)s')
-
-def load_settings():
-    if os.path.exists(SETTINGS_FILE):
-        with open(SETTINGS_FILE, 'r') as f:
-            return json.load(f)
-    else:
-        return {}
-
-def save_settings(settings):
-    with open(SETTINGS_FILE, 'w') as f:
-        json.dump(settings, f, indent=4)
+# Setup logging to standard output
+logging.basicConfig(
+    level=logging.INFO,
+    stream=sys.stdout,  # Log to standard output
+    format='%(asctime)s %(levelname)s:%(message)s'
+)
 
 def is_wsl():
     """
@@ -115,14 +107,15 @@ def index():
 def connect():
     data = request.get_json()
     world_name = data.get('world_name')
+    saves_path = data.get('saves_path')  # Expecting saves_path from client
     
-    if not world_name:
-        logging.warning('Connect attempt without world name.')
-        return jsonify({'success': False, 'message': 'World name is required.'}), 400
+    if not world_name or not saves_path:
+        logging.warning('Connect attempt without world name or saves_path.')
+        return jsonify({'success': False, 'message': 'World name and saves_path are required.'}), 400
 
-    world_path = get_minecraft_saves_path(world_name)
-
-    if not world_path:
+    world_path = Path(saves_path) / world_name
+    
+    if not world_path.exists() or not world_path.is_dir():
         logging.error(f'World "{world_name}" does not exist in saves directory.')
         return jsonify({'success': False, 'message': f'World "{world_name}" does not exist in saves directory.'}), 404
 
@@ -155,11 +148,6 @@ def connect():
     else:
         max_id = 0
 
-    settings = load_settings()
-    settings['world_name'] = world_name
-    settings['saves_path'] = str(world_path)
-    save_settings(settings)
-
     response = {
         'success': True,
         'computercraft_installed': computercraft_installed,
@@ -181,14 +169,15 @@ def connect():
 def create_computercraft():
     data = request.get_json()
     world_name = data.get('world_name')
+    saves_path = data.get('saves_path')  # Expecting saves_path from client
 
-    if not world_name:
-        logging.warning('Create ComputerCraft folders attempt without world name.')
-        return jsonify({'success': False, 'message': 'World name is required.'}), 400
+    if not world_name or not saves_path:
+        logging.warning('Create ComputerCraft folders attempt without world name or saves_path.')
+        return jsonify({'success': False, 'message': 'World name and saves_path are required.'}), 400
 
-    world_path = get_minecraft_saves_path(world_name)
+    world_path = Path(saves_path) / world_name
 
-    if not world_path:
+    if not world_path.exists() or not world_path.is_dir():
         logging.error(f'World "{world_name}" does not exist in saves directory.')
         return jsonify({'success': False, 'message': f'World "{world_name}" does not exist in saves directory.'}), 404
 
@@ -213,15 +202,14 @@ def create_computercraft():
 
 @app.route('/api/get_computer_ids', methods=['GET'])
 def get_computer_ids():
-    settings = load_settings()
-    world_name = settings.get('world_name')
-    saves_path = Path(settings.get('saves_path', ''))
+    world_name = request.args.get('world_name')
+    saves_path = request.args.get('saves_path')  # Expecting saves_path from client
 
     if not world_name or not saves_path:
         logging.warning('Attempt to get Computer IDs without connected world.')
-        return jsonify({'success': False, 'message': 'World not connected.'}), 400
+        return jsonify({'success': False, 'message': 'World name and saves_path are required.'}), 400
 
-    computercraft_path = saves_path / 'computercraft' / 'computer'
+    computercraft_path = Path(saves_path) / world_name / 'computercraft' / 'computer'
 
     if not computercraft_path.exists() or not computercraft_path.is_dir():
         logging.error('ComputerCraft computer directory not found.')
@@ -244,19 +232,14 @@ def run_program():
     computer_id = data.get('computer_id')
     code = data.get('code')
     filename = data.get('filename', 'startup.lua')  
+    world_name = data.get('world_name')
+    saves_path = data.get('saves_path')  # Expecting saves_path from client
 
-    if not computer_id or not code:
-        logging.warning('Run program attempt without Computer ID or code.')
-        return jsonify({'success': False, 'message': 'Computer ID and code are required.'}), 400
+    if not all([computer_id, code, world_name, saves_path]):
+        logging.warning('Run program attempt without all required parameters.')
+        return jsonify({'success': False, 'message': 'Computer ID, code, world_name, and saves_path are required.'}), 400
 
-    settings = load_settings()
-    saves_path = Path(settings.get('saves_path', ''))
-    world_name = settings.get('world_name', '')
-    if not saves_path or not world_name:
-        logging.warning('Run program attempt without connected world.')
-        return jsonify({'success': False, 'message': 'World not connected.'}), 400
-
-    computercraft_path = saves_path / 'computercraft' / 'computer'
+    computercraft_path = Path(saves_path) / world_name / 'computercraft' / 'computer'
     computer_folder = computercraft_path / computer_id
 
     if not computer_folder.exists() or not computer_folder.is_dir():
