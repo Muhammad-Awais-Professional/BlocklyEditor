@@ -309,14 +309,14 @@ def os_info():
         'is_wsl': is_wsl()
     }), 200
 
-# if __name__ == '__main__':
-#     PORT = 5000
+if __name__ == '__main__':
+    PORT = 5000
 
-#     def run_app():
-#         app.run(host='0.0.0.0', port=PORT, debug=False)
+    def run_app():
+        app.run(host='0.0.0.0', port=PORT, debug=False)
 
-#     thread = Thread(target=run_app)
-#     thread.start()
+    thread = Thread(target=run_app)
+    thread.start()
 
-#     time.sleep(1)
-#     # Removed webbrowser.open since it's not needed on a server
+    time.sleep(1)
+    # Removed webbrowser.open since it's not needed on a server
