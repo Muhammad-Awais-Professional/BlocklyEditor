@@ -11,7 +11,7 @@ import re
 from dotenv import load_dotenv  # For environment variable management
 import paramiko  # For SFTP operations
 
-# Load environment variables from .env files
+# Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
