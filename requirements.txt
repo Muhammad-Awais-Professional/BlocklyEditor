@@ -1,4 +1,4 @@
 Flask
 python-dotenv
-Paramiko
-vercel-wsgi
+paramiko
+werkzeug
