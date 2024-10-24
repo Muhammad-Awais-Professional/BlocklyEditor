@@ -11,27 +11,27 @@ import re
 from dotenv import load_dotenv  # For environment variable management
 import paramiko  # For SFTP operations
 
-# Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
 
-# Configuration from environment variables
-DEFAULT_SAVES_PATH = os.getenv('MINECRAFT_BASE_PATH')
-
-# SFTP Configuration
+# Load environment variables
+MINECRAFT_BASE_PATH = os.getenv('MINECRAFT_BASE_PATH')
 SFTP_HOST = os.getenv('SFTP_HOST')
 SFTP_PORT = int(os.getenv('SFTP_PORT', 22))
 SFTP_USERNAME = os.getenv('SFTP_USERNAME')
 SFTP_PASSWORD = os.getenv('SFTP_PASSWORD')
-SFTP_BASE_PATH = os.getenv('SFTP_BASE_PATH', '/home/container/world')
+SFTP_BASE_PATH = os.getenv('SFTP_BASE_PATH')
 
-# Validate essential environment variables
-if not DEFAULT_SAVES_PATH:
-    raise ValueError("MINECRAFT_BASE_PATH environment variable is not set.")
-
+# Validate SFTP credentials
 if not all([SFTP_HOST, SFTP_PORT, SFTP_USERNAME, SFTP_PASSWORD]):
     raise ValueError("SFTP credentials are not fully set in environment variables.")
+
+# Example route
+@app.route('/', methods=['GET'])
+def hello():
+    return jsonify({'message': 'Hello, world!'})
+
 
 # Setup logging to standard output
 logging.basicConfig(
