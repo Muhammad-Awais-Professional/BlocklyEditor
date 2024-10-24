@@ -8,7 +8,8 @@ from threading import Thread
 import time
 import logging
 import re
-from dotenv import load_dotenv  # Added for environment variable management
+from dotenv import load_dotenv  # For environment variable management
+import paramiko  # For SFTP operations
 
 # Load environment variables from .env file
 load_dotenv()
@@ -19,9 +20,20 @@ app = Flask(__name__)
 SETTINGS_FILE = os.getenv('SETTINGS_FILE', 'settings.json')
 DEFAULT_SAVES_PATH = os.getenv('MINECRAFT_BASE_PATH')
 
+# SFTP Configuration
+SFTP_HOST = os.getenv('SFTP_HOST')
+SFTP_PORT = int(os.getenv('SFTP_PORT', 22))
+SFTP_USERNAME = os.getenv('SFTP_USERNAME')
+SFTP_PASSWORD = os.getenv('SFTP_PASSWORD')
+SFTP_BASE_PATH = os.getenv('SFTP_BASE_PATH', '/home/container/world')
+
 if not DEFAULT_SAVES_PATH:
     raise ValueError("MINECRAFT_BASE_PATH environment variable is not set.")
 
+if not all([SFTP_HOST, SFTP_PORT, SFTP_USERNAME, SFTP_PASSWORD]):
+    raise ValueError("SFTP credentials are not fully set in environment variables.")
+
+# Setup logging
 logging.basicConfig(level=logging.INFO, filename='app.log',
                     format='%(asctime)s %(levelname)s:%(message)s')
 
@@ -62,6 +74,38 @@ def get_minecraft_saves_path(world_name=None):
         return world_path
     else:
         return base_path
+
+def get_sftp_client():
+    """
+    Establishes and returns an SFTP client using Paramiko.
+    """
+    try:
+        transport = paramiko.Transport((SFTP_HOST, SFTP_PORT))
+        transport.connect(username=SFTP_USERNAME, password=SFTP_PASSWORD)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        logging.info("SFTP connection established.")
+        return sftp, transport
+    except Exception as e:
+        logging.error(f"Failed to connect to SFTP: {e}")
+        raise
+
+def mkdir_p_sftp(sftp, remote_directory):
+    """
+    Recursively creates directories on the SFTP server.
+    """
+    dirs = remote_directory.strip('/').split('/')
+    path = ''
+    for dir in dirs:
+        path += f'/{dir}'
+        try:
+            sftp.stat(path)
+        except FileNotFoundError:
+            try:
+                sftp.mkdir(path)
+                logging.info(f'Created remote directory: {path}')
+            except Exception as e:
+                logging.error(f'Failed to create remote directory {path}: {e}')
+                raise
 
 @app.route('/')
 def index():
@@ -229,41 +273,48 @@ def run_program():
         functions = extract_functions(code)
         if not functions:
             # If no functions found, save the entire code as a single file
-            lua_file_path = computer_folder / sanitized_filename
-            with open(lua_file_path, 'w') as f:
-                f.write(code)
-            logging.info(f'Lua program successfully written to Computer ID "{computer_id}" as "{sanitized_filename}".')
-            return jsonify({'success': True, 'message': f'Lua program successfully written to Computer ID "{computer_id}" as "{sanitized_filename}".'}), 200
-        
-        # No separate 'functions' directory; save directly in computer_folder
-        # Read and update ids.json
-        ids_json_path = computercraft_path / 'ids.json'
-        if ids_json_path.exists():
-            with open(ids_json_path, 'r') as f:
-                ids_data = json.load(f)
+            lua_content = code
+            files_to_upload = {sanitized_filename: lua_content}
+            logging.info(f'Lua program will be uploaded to Computer ID "{computer_id}" as "{sanitized_filename}".')
         else:
-            ids_data = {"computer": 0}
-        
-        for func_name, func_code in functions:
-            # Sanitize function name for filename
-            clean_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', func_name)
-            func_filename = f"{clean_name}.lua"
-            func_file_path = computer_folder / func_filename
-            
-            with open(func_file_path, 'w') as f:
-                f.write(func_code)
-            
-            # Optionally, update 'ids.json' or any other tracking as needed
-            # Example: Increment computer ID or track functions
-            # Here, we'll skip updating ids.json for simplicity
+            # Prepare multiple function files
+            files_to_upload = {}
+            for func_name, func_code in functions:
+                clean_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', func_name)
+                func_filename = f"{clean_name}.lua"
+                files_to_upload[func_filename] = func_code
+            logging.info(f'{len(functions)} functions will be uploaded to Computer ID "{computer_id}".')
 
-            logging.info(f'Function "{func_name}" saved as "{func_filename}" in Computer ID "{computer_id}".')
+        # Connect to SFTP
+        sftp, transport = get_sftp_client()
+        try:
+            # Define remote directory path
+            remote_dir = os.path.join(SFTP_BASE_PATH, world_name, 'computercraft', 'computer', computer_id)
+            # Ensure the remote directory exists
+            try:
+                sftp.chdir(remote_dir)
+            except IOError:
+                # Directory does not exist, create it
+                mkdir_p_sftp(sftp, remote_dir)
+                logging.info(f"Created remote directory: {remote_dir}")
 
-        return jsonify({'success': True, 'message': f'{len(functions)} functions successfully written to Computer ID "{computer_id}".'}), 200
+            # Upload each file
+            for fname, content in files_to_upload.items():
+                remote_file_path = os.path.join(remote_dir, fname)
+                with sftp.file(remote_file_path, 'w') as remote_file:
+                    remote_file.write(content)
+                logging.info(f'Uploaded "{fname}" to "{remote_file_path}".')
+
+        finally:
+            sftp.close()
+            transport.close()
+            logging.info("SFTP connection closed.")
+
+        return jsonify({'success': True, 'message': 'Lua program successfully uploaded.'}), 200
 
     except Exception as e:
-        logging.error(f'Error writing Lua files to {computer_folder}: {e}')
-        return jsonify({'success': False, 'message': f'Error writing Lua files: {str(e)}'}), 500
+        logging.error(f'Error uploading Lua files: {e}')
+        return jsonify({'success': False, 'message': f'Error uploading Lua files: {str(e)}'}), 500
 
 def extract_functions(lua_code):
     """
@@ -309,14 +360,5 @@ def os_info():
         'is_wsl': is_wsl()
     }), 200
 
-if __name__ == '__main__':
-    PORT = 5000
+# Note: The main execution block is removed as Vercel handles the server execution.
 
-    def run_app():
-        app.run(host='0.0.0.0', port=PORT, debug=False)
-
-    thread = Thread(target=run_app)
-    thread.start()
-
-    time.sleep(1)
-    # Removed webbrowser.open since it's not needed on a server
